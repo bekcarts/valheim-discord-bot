@@ -1,0 +1,15 @@
+[Unit]
+Description=Discord bot for Vikea Valheim server status/restart
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubentu
+WorkingDirectory=/home/ubentu/personal/valheim-discord-bot
+ExecStart=/home/ubentu/.nvm/versions/node/v24.19.0/bin/node src/index.js
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target

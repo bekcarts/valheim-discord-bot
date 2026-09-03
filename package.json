@@ -1,0 +1,16 @@
+{
+  "name": "valheim-discord-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Discord bot for checking Vikea Valheim server status and requesting restarts",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "register-commands": "node src/register-commands.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.5"
+  }
+}
