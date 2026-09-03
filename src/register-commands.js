@@ -3,8 +3,14 @@ import { REST, Routes } from "discord.js";
 import * as status from "./commands/status.js";
 import * as restart from "./commands/restart.js";
 import * as info from "./commands/info.js";
+import * as announce from "./commands/announce.js";
 
-const commands = [status.data.toJSON(), restart.data.toJSON(), info.data.toJSON()];
+const commands = [
+  status.data.toJSON(),
+  restart.data.toJSON(),
+  info.data.toJSON(),
+  announce.data.toJSON(),
+];
 
 const rest = new REST().setToken(process.env.DISCORD_TOKEN);
 

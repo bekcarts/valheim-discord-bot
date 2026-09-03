@@ -14,6 +14,7 @@ import {
 } from "../lib/state.js";
 import { startRestart, isCancelled, clearRestart } from "../lib/restartControl.js";
 import { brand, ANSI, ansiBlock } from "../lib/branding.js";
+import { sendRconCommand } from "../lib/rcon.js";
 
 const SERVICE_NAME = process.env.SERVICE_NAME || "valheim-vikea.service";
 const COOLDOWN_MINUTES = parseInt(process.env.RESTART_COOLDOWN_MINUTES || "15", 10);
@@ -24,6 +25,26 @@ const ALLOWED_ROLE_IDS = (process.env.ALLOWED_ROLE_IDS || "")
   .filter(Boolean);
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// In-game broadcasts are a supplementary nice-to-have — never let an RCON
+// hiccup break the actual Discord-side restart flow.
+async function broadcastInGame(text) {
+  try {
+    await sendRconCommand(`broadcast center ${text}`);
+  } catch (err) {
+    console.error("Failed to send in-game restart broadcast:", err);
+  }
+}
+
+// Fixed in-game announcement checkpoints, independent of the Discord embed's
+// per-minute update cadence.
+const BROADCAST_CHECKPOINTS = [
+  { seconds: 300, text: "Restart in 5 mins" },
+  { seconds: 120, text: "Restart in 2 mins" },
+  { seconds: 60, text: "Restart in 1 min" },
+  { seconds: 30, text: "Restart in 30 secs" },
+  { seconds: 15, text: "Restart in 15 secs" },
+];
 
 export const data = new SlashCommandBuilder()
   .setName("restart")
@@ -132,6 +153,18 @@ export async function execute(interaction) {
     const totalSeconds = COUNTDOWN_MINUTES * 60;
     let elapsed = 0;
     let lastShown = COUNTDOWN_MINUTES;
+    const announced = new Set();
+
+    async function announceCheckpoint(remainingSeconds) {
+      const checkpoint = BROADCAST_CHECKPOINTS.find(
+        (c) => c.seconds === remainingSeconds && !announced.has(c.seconds),
+      );
+      if (!checkpoint) return;
+      announced.add(checkpoint.seconds);
+      await broadcastInGame(`<color=#faa61a><b>${checkpoint.text}</b></color>`);
+    }
+
+    await announceCheckpoint(totalSeconds);
 
     while (elapsed < totalSeconds) {
       await sleep(5_000);
@@ -146,11 +179,15 @@ export async function execute(interaction) {
           components: minutesLeft > 0 ? [cancelRow] : [],
         });
       }
+      await announceCheckpoint(totalSeconds - elapsed);
     }
 
     // If cancelled, the button click handler already updated the message —
     // nothing left to do here.
-    if (isCancelled()) return;
+    if (isCancelled()) {
+      await broadcastInGame(`<color=#99aab5><b>Restart Canceled</b></color>`);
+      return;
+    }
 
     await restartService(SERVICE_NAME);
 

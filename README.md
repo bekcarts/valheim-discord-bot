@@ -1,8 +1,10 @@
 # Vikea Valheim Discord Bot
 
 `/status` — online state, players online, join code, in-game day, uptime, last save.
-`/restart` — role-gated, cooldown-limited, warns for a few minutes before restarting.
+`/restart` — role-gated, cooldown-limited, warns for a few minutes before restarting
+(both in Discord and as an in-game broadcast).
 `/info` — world/port/crossplay/mods/version config, read live from the running process.
+`/announce` — anyone can broadcast a message to everyone in-game (cooldown-limited).
 Crash alerts — pings a role in the channel automatically if the game process fails.
 
 ## 1. Discord application
@@ -72,7 +74,31 @@ sudo systemctl daemon-reload
 
 No `enable` needed for `valheim-crash-flag.service` — `OnFailure=` starts it on demand.
 
-## 5. Run it
+## 5. In-game broadcasts (RCON)
+
+`/announce` and `/restart`'s countdown push real messages into the game (center-screen
+text), not just Discord. This needs three BepInEx mods installed on the **game server**
+(not this bot's directory) and RCON configured:
+
+- [`AviiNL/rcon`](https://github.com/AviiNL/BepInEx.rcon) — adds an RCON port to the server.
+- [`JereKuusela/Rcon_Commands`](https://github.com/JereKuusela/valheim-rcon_commands) — lets RCON execute console commands.
+- [`JereKuusela/Server_devcommands`](https://github.com/JereKuusela/valheim-dev) — provides the `broadcast` command itself.
+
+Drop each mod's DLL into `BepInEx/plugins/` on the game server, start it once to
+generate configs, then stop it and edit:
+
+- `BepInEx/config/nl.avii.plugins.rcon.cfg` — set `enabled = true` and pick a strong `password`.
+- `BepInEx/config/server_devcommands.cfg` — set `Server chat = true` (lets the server itself
+  send broadcasts without a live admin client connected).
+
+Then set in this bot's `.env`: `RCON_HOST` (usually `127.0.0.1`, since the bot and game
+run on the same box), `RCON_PORT` (matches the rcon config, default `2458`), and
+`RCON_PASSWORD` (matches the rcon config).
+
+**Never port-forward the RCON port** — unlike the game port or WebMap, it grants full
+admin command execution on the server.
+
+## 6. Run it
 
 For a one-off test run:
 
@@ -95,5 +121,6 @@ sudo systemctl enable --now valheim-discord-bot.service
   connection order. The player *count* is always accurate.
 - In-game day/time assumes the default 1800s day length; change
   `DAY_LENGTH_SECONDS` in `.env` if the server's day length is modified.
-- There's no in-game chat broadcast for the restart countdown (no mod for it
-  is installed) — the warning only appears in Discord.
+- In-game broadcasts (`/announce`, restart countdown) are best-effort — if RCON is
+  unreachable or unconfigured, the Discord-side flow still completes normally,
+  it just won't show up in-game.

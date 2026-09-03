@@ -3,6 +3,7 @@ import { Client, GatewayIntentBits, Collection, EmbedBuilder } from "discord.js"
 import * as status from "./commands/status.js";
 import * as restart from "./commands/restart.js";
 import * as info from "./commands/info.js";
+import * as announce from "./commands/announce.js";
 import { buildStatusEmbed } from "./lib/statusCard.js";
 import {
   isCancelled,
@@ -16,7 +17,7 @@ import { brand } from "./lib/branding.js";
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 client.commands = new Collection();
-for (const command of [status, restart, info]) {
+for (const command of [status, restart, info, announce]) {
   client.commands.set(command.data.name, command);
 }
 
