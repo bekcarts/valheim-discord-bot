@@ -10,7 +10,7 @@ export async function buildStatusEmbed(interaction) {
   const state = await getServiceState(SERVICE_NAME);
   const isOnline = state === "active";
 
-  const embed = brand(new EmbedBuilder(), interaction)
+  const embed = brand(new EmbedBuilder(), interaction.client)
     .setTitle("🛡️ Vikea — Valheim Server")
     .setTimestamp();
 

@@ -2,6 +2,8 @@
 
 `/status` — online state, players online, join code, in-game day, uptime, last save.
 `/restart` — role-gated, cooldown-limited, warns for a few minutes before restarting.
+`/info` — world/port/crossplay/mods/version config, read live from the running process.
+Crash alerts — pings a role in the channel automatically if the game process fails.
 
 ## 1. Discord application
 
@@ -15,6 +17,8 @@ Create an application + bot at https://discord.com/developers/applications, then
   (comma-separate multiple roles; leave blank to let anyone use `/restart`)
 - Right-click the channel the bot should respond in → Copy Channel ID → `ALLOWED_CHANNEL_ID`
   (leave blank to allow any channel)
+- Right-click the role that should be pinged on a crash → Copy Role ID → `CRASH_ALERT_ROLE_ID`
+  (leave blank for a plain, unpinged alert)
 
 Copy `.env.example` to `.env` and fill in the values above.
 
@@ -45,7 +49,30 @@ ubentu ALL=(root) NOPASSWD: /usr/bin/systemctl restart valheim-vikea.service
 (`/status` needs no special permissions — reading `journalctl`/`systemctl` for this
 unit already works for `ubentu` via the `adm` group.)
 
-## 4. Run it
+## 4. Crash alerting
+
+If the game process crashes, `systemd`'s `OnFailure=` hook (not polling, so it can't
+miss the brief failed state before `Restart=on-failure` kicks in) touches a flag file
+that the bot checks every 15s and turns into a Discord alert.
+
+Install the one-shot flag-writer:
+
+```bash
+sudo cp /home/ubentu/personal/valheim-discord-bot/systemd/valheim-crash-flag.service /etc/systemd/system/
+```
+
+Wire it to the game service without touching its original unit file:
+
+```bash
+sudo mkdir -p /etc/systemd/system/valheim-vikea.service.d
+sudo cp /home/ubentu/personal/valheim-discord-bot/systemd/valheim-vikea-onfailure.conf \
+  /etc/systemd/system/valheim-vikea.service.d/override.conf
+sudo systemctl daemon-reload
+```
+
+No `enable` needed for `valheim-crash-flag.service` — `OnFailure=` starts it on demand.
+
+## 5. Run it
 
 For a one-off test run:
 

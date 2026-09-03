@@ -1,0 +1,7 @@
+[Unit]
+Description=Flag a Vikea crash for the Discord bot to report
+
+[Service]
+Type=oneshot
+User=ubentu
+ExecStart=/usr/bin/touch /home/ubentu/personal/valheim-discord-bot/data/crash-flag

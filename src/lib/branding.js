@@ -1,8 +1,8 @@
 // Shared visual branding for every embed the bot sends: a consistent footer.
-export function brand(embed, interaction) {
+export function brand(embed, client) {
   return embed.setFooter({
     text: "Vikea Server Monitor",
-    iconURL: interaction.client.user.displayAvatarURL(),
+    iconURL: client.user.displayAvatarURL(),
   });
 }
 

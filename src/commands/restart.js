@@ -57,7 +57,7 @@ function countdownEmbed(interaction, minutesLeft, requestedBy) {
     ? `Requested by ${requestedBy}`
     : `Requested by ${requestedBy}\nSave what you're doing and get somewhere safe.`;
 
-  return brand(new EmbedBuilder(), interaction)
+  return brand(new EmbedBuilder(), interaction.client)
     .setTitle("🛡️ Vikea — Valheim Server")
     .setColor(0xfaa61a)
     .setDescription(`${statusWord}\n\n${timeBlock}\n${noteLine}`)
@@ -65,7 +65,7 @@ function countdownEmbed(interaction, minutesLeft, requestedBy) {
 }
 
 export function cancelledEmbed(interaction, requestedBy, cancelledBy) {
-  return brand(new EmbedBuilder(), interaction)
+  return brand(new EmbedBuilder(), interaction.client)
     .setTitle("🛡️ Vikea — Valheim Server")
     .setColor(0x99aab5)
     .setDescription(
@@ -80,7 +80,7 @@ function resultEmbed(interaction, success, requestedBy) {
     ? `Requested by ${requestedBy}.`
     : `Restart command was sent, but the server hasn't come back up yet. Check \`/status\` or the host directly.\nRequested by ${requestedBy}.`;
 
-  return brand(new EmbedBuilder(), interaction)
+  return brand(new EmbedBuilder(), interaction.client)
     .setTitle("🛡️ Vikea — Valheim Server")
     .setColor(success ? 0x57f287 : 0xed4245)
     .setDescription(`${statusWord}\n\n${note}`)
